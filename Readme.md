@@ -1,4 +1,4 @@
-Commit 1 : Basic Set-up to create an API
+## Commit 1 : Basic Set-up to create an API
 
 1. Create a app.js file
 
@@ -81,7 +81,7 @@ Now, check on postman by getting to route localhost:3000/ if you are getting the
         }   
 
 
-Commit 2 : Error Handling setUp
+## Commit 2 : Error Handling setUp
 
 
 1. create a route in app.js
@@ -150,3 +150,65 @@ now update the indexController.js page as :
 exports.homepage = catchAsyncErrors(async(req,res,next) => {
         res.json({message : 'homepage'})
 });
+
+## Commit 3 : Connecting Database and Schema
+
+1. Create a new database by creating a new folder named models on root level and file named database.js inside it with data : 
+
+const mongoose = require('mongoose');
+
+exports.connectDatabase = async() => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URL);
+        console.log('Connection Estabilished!!');
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+2. update .env file as by adding : 
+MONGODB_URL = 'mongodb://127.0.0.1/DBName'
+
+3. connect databse with app.js by adding following in app.js
+
+//db connection
+require('./Models/Database').connectDatabase();
+
+4. Make Schema :- 
+    Make a file named StudentModel.js in Models and add following code :
+    const mongoose = require('mongoose');
+
+    const studentSchema = mongoose.Schema({
+        email : {
+            type : String,
+            unique : true,
+            required : true,
+            match : [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+        },
+        password : {
+            type : String,
+            minLength : [6, 'Password Length should contain atleast 6 characters'],
+            maxLength : [15, 'Password Length should not be more than 15 characters'],
+        }
+    },{timeStamp : true});
+
+    const student = mongoose.model('student', studentSchema);
+
+    module.exports = ('student' , student);
+
+5. Create a function createJobSeeker in indexController.js as : 
+
+    exports.createJobSeeker = catchAsyncErrors(async(req,res,next) => {
+        res.json(req.body);
+    });
+
+6. Now, create a route to register jobSeekers in indexRouter.js as :
+    router.post('/signup/jobSeeker', createJobSeeker);
+
+    dont forget to import createJobSeeker.
+
+7. You will not get data until there is body parser activated in app.js which helps in connecting database with express and showing data from req.body. 
+For that, simply add following code in app.js above routes bwing initialized :
+
+    app.use(express.json());
+    app.use(express.urlencoded({extender : false}))
