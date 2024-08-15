@@ -167,7 +167,7 @@ exports.connectDatabase = async() => {
 }
 
 2. update .env file as by adding : 
-MONGODB_URL = 'mongodb://127.0.0.1/DBName'
+MONGODB_URL = 'mongodb://127.0.0.1:27017/DBName'
 
 3. connect databse with app.js by adding following in app.js
 
