@@ -194,7 +194,7 @@ require('./Models/Database').connectDatabase();
 
     const student = mongoose.model('student', studentSchema);
 
-    module.exports = ('student' , student);
+    module.exports =  student;
 
 5. Create a function createJobSeeker in indexController.js as : 
 
