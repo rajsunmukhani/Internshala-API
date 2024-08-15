@@ -212,3 +212,16 @@ For that, simply add following code in app.js above routes bwing initialized :
 
     app.use(express.json());
     app.use(express.urlencoded({extender : false}))
+
+8. Now, here we can see that even without sending a valid info still the request is getting fetched.
+This is because we are just checking the data is coming or not and not updating or saving the data in mongoose.
+If we will save or update the data in mongoose then it will give us the error as well as surpass all validations to save the data in database.
+For it simply go to : indexController.js and update 
+   *res.json(req.body)*
+   to
+    *const students = await new student(req.body).save();
+    res.status(200).json(students);*
+
+   ** Dont forget to require student from studentModel.js
+
+
