@@ -222,6 +222,8 @@ For it simply go to : indexController.js and update
     *const students = await new student(req.body).save();
     res.status(200).json(students);*
 
+** Dont forget to require student from studentModel.js
+
 ## Commit 4 - 6 Updated Readme.md : Fixed Errors
 
 ## Commit 7  : Continued Connecting Databse and Schema Enabled signin and errorhandling
@@ -327,8 +329,8 @@ NOTE: Don't forget to import bcrypt.
         Here, if the password doesn't matches the saved coded password, then it will return a error with invalid credentials.
 
 
-## Commit 8 : Updating Readme (as per commit 7 code);
+## Commit 8-9 : Updating Readme (as per commit 7 code), fixed some mistakes in readme.md;
 
-   ** Dont forget to require student from studentModel.js
+   
 
 
