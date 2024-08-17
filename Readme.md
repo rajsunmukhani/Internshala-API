@@ -222,6 +222,113 @@ For it simply go to : indexController.js and update
     *const students = await new student(req.body).save();
     res.status(200).json(students);*
 
+## Commit 4 - 6 Updated Readme.md : Fixed Errors
+
+## Commit 7  : Continued Connecting Databse and Schema Enabled signin and errorhandling
+
+9. Now, at the time of signing up with same email id twice it gives as error named E11000 duplicate key which is not looking good, hence we will make this readable by going *Error.js* in folder *Middleware* and there we will make an update and add the following code :
+
+    if (err.message.includes('E11000 duplicate key') && err.name == 'MongoServerError') {
+        err.message = 'User Already Registered with this Email Address!'
+    }
+
+And this will make that particular Error readable for user!
+
+10. Now, as we can see on the databse, that we are getting password directly, which is not good for our code, so for that we will be using an outsourced package named *bcrypt* to make our passwords encoded.
+
+For that go to StudentModel.js file under folder Models and above the last two lines of code add the following code chunk :
+
+    studentSchema.pre('save', function() {
+        const salt = bcrypt.genSaltSync(10);
+        this.password = bcrypt.hashSync(this.password, salt);
+    });
+
+NOTE: Don't forget to import bcrypt.
+
+11. Now, here is one issue, everytime we save the data the salt for the password will get updated which is not good for our code, salts should only be updated only when password is updated. For that update the above chunk of code as:
+
+    studentSchema.pre('save', function() {
+
+        if (!studentSchema.isModified('password')) {
+            return;
+        }
+
+        const salt = bcrypt.genSaltSync(10);
+        this.password = bcrypt.hashSync(this.password, salt);
+    });
+
+12. Now, signup is completed and we will be working on Signin, For this create two controllers on indexController.js as : 
+
+    exports.signinJobSeeker = catchAsyncErrors(async(req,res,next) => {});
+    exports.signoutJobSeeker = catchAsyncErrors(async(req,res,next) => {});
+
+    And, two routes in indexRouter.js as :
+
+    router.post('/signin/jobSeeker', signinJobSeeker);
+    router.get('/signout/jobSeeker', signoutJobSeeker);
+
+*NOTE : Dont forget to import signinJobSeeker and signoutJobSeeker form indexController.js*
+
+13. Creating signin
+
+    First of all check whether your are getting the data in backend or not, for that update the signinJobSeeker controller as :
+
+    exports.signinJobSeeker = catchAsyncErrors(async(req,res,next) => {
+        res.json(req.body);
+    });
+    
+    If you get data in backend using postman, update the controller as:
+
+    exports.signinJobSeeker = catchAsyncErrors(async(req,res,next) => {
+        const student = await StudentModel.findOne({email : req.body.email}).select('+password').exec();
+        res.json(student);
+    });
+
+    Now, there will be chances when the user is not registered bu trying to login for them update the code as :
+
+    exports.signinJobSeeker = catchAsyncErrors(async(req,res,next) => {
+        const student = await StudentModel.findOne({email : req.body.email}).select('+password').exec();
+
+        if (!student) {
+            next(new ErrorHandler('User Not Found', 404))
+        };
+
+        res.json(student);
+    });
+    
+    Also, there will be chances when user tries to enter wrong password for them we will make a method in studentModel.js and use it in controller.js to check the password entered is correct or not in the following way:
+
+        Add following code in StudentModel.js
+
+        studentSchema.methods.comparePassword = function(password){
+            return bcrypt.compareSync(password, this.password);
+        };
+
+        This will return the value of true or false, by checking the coded value of password with the currently entered password.
+
+        Use this method in signin controller as the updated signin controller will look like : 
+
+        exports.signinJobSeeker = catchAsyncErrors(async(req,res,next) => {
+            const student = await StudentModel.findOne({email : req.body.email}).select('+password').exec();
+
+            if (!student) {
+                next(new ErrorHandler('User Not Found', 404))
+            };
+
+            const isMatch = student.comparePassword(req.body.password);
+
+            if (!isMatch) {
+                return next(new ErrorHandler ('invalid credentials!' , 500));
+            };
+
+            res.json(student);
+        });
+
+        Here, if the password doesn't matches the saved coded password, then it will return a error with invalid credentials.
+
+
+## Commit 8 : Updating Readme (as per commit 7 code);
+
    ** Dont forget to require student from studentModel.js
 
 
