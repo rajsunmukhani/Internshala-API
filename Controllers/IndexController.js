@@ -1,6 +1,7 @@
 const { catchAsyncErrors } = require("../Middlewares/catchAsyncErrors");
 const StudentModel = require("../Models/StudentModel");
-const ErrorHandler = require('../utils/ErrorHandler')
+const ErrorHandler = require('../utils/ErrorHandler');
+const { sendToken } = require("../utils/sendToken");
 
 exports.homepage = catchAsyncErrors(async(req,res,next) => {
     res.json({message : 'homepage'})   
@@ -8,7 +9,7 @@ exports.homepage = catchAsyncErrors(async(req,res,next) => {
 
 exports.createJobSeeker = catchAsyncErrors(async(req,res,next) => {
     const student = await new StudentModel(req.body).save();
-    res.status(200).json(student);
+    sendToken(student,200,res);
 });
 
 exports.signinJobSeeker = catchAsyncErrors(async(req,res,next) => {
@@ -20,7 +21,18 @@ exports.signinJobSeeker = catchAsyncErrors(async(req,res,next) => {
     if (!isMatch) {
         return next(new ErrorHandler('Wrong Credentials', 500));
     }
-    res.json(student);
+    sendToken(student,201,res);
 });
 
-exports.signoutJobSeeker = catchAsyncErrors(async(req,res,next) => {});
+exports.signoutJobSeeker = catchAsyncErrors(async(req,res,next) => {
+    res.clearCookie('token').json({
+        message : 'Signedout Succesfully!',
+    });
+});
+
+exports.currentUser = catchAsyncErrors(async(req,res,next) => {
+    const student = await StudentModel.findById(req.id).exec();
+    res.json({student});
+});
+
+

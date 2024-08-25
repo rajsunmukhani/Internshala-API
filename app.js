@@ -8,6 +8,18 @@ const ErrorHandler = require('./utils/ErrorHandler');
 const { generatedError } = require('./Middlewares/Error');
 app.use(logger('tiny'));
 
+//cookie-parser & express-session
+const session = require('express-session');
+const cookieparser = require('cookie-parser');
+
+app.use(session({
+    resave : true,
+    saveUninitialized : true,
+    secret : process.env.SESSION_SECRET
+}))
+app.use(cookieparser());
+
+
 //body parser
 app.use(express.json());
 app.use(express.urlencoded({extended : false}));

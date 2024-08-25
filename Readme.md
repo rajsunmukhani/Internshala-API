@@ -331,6 +331,135 @@ NOTE: Don't forget to import bcrypt.
 
 ## Commit 8-9 : Updating Readme (as per commit 7 code), fixed some mistakes in readme.md;
 
-   
+## Commit 10 : Creating Sessions and Authntications
+
+1. install following packages:
+    *npm i express-session cookie-parser jsonwebtoken*
+
+2. Setup all three step by step.
+    => **express-session**
+        Go to app.js and besided logger add following code :
+
+            const session = require('express-session');
+
+            app.use(session({
+                resave : true,
+                saveUninitialized : true,
+                secret : process.env.SESSION_SECRET
+            }))
+
+    => **cookie-parser**
+        along with express-session add following code : 
+
+        const cookieparser = require('cookie-parser');
+        app.use(cookieparser());
+
+    => **jsonwebtoken**
+        this package will be basically used to create a token whenever user either logsin or signsup, hence in studentModel.js file make a function which does so:
+
+        const jwt = require('jsonwebtoken');
+
+        studentModel.genToken = function(){
+            return jwt.sign({id : this._id}, process.env.JWT_SECRET, {expiresIn : process.env.JWT_EXPIRY})
+        };
+
+**Note : dont forget to introduce all env endpoints with data**
+
+3. Now, as we introduced the function to create token, now we need to save token to session everytime user signsup or logsin, instead using it twice, we will create a file in utils named sendToken.js and use it in both the signin and signup controllers.
+
+**sendToken.js**
+
+exports.sendToken = (student,statusCode,res) => {
+    const token = student.genToken();
+    res.json(token);
+}
+
+**use for signin controller :**
+replace res.json() with sendToken(student, 201, res);
+**use for signup controller :**
+replace res.json() with sendToken(student, 200, res);
+
+check if you are getting data or note by applying the function to any controller first, if yes proceed further and update function as :
+
+
+exports.sendToken = (student,statusCode,res) => {
+    const token = student.genToken();
+    const options = {
+        expiresIn : new Date(
+            Date.now() + process.env.TOKEN_EXPIRY * 24 * 60 * 60 * 1000,
+        ),
+        httpOnly : true,
+        // secured : true
+    }
+    res.status(statusCode).cookie('token',token,options).json({
+        success : true,
+        id : student._id,
+        token
+    })
+}
+
+now according to above code sendToken function takes in input as student,statusCode, and response and then generates token and saves it in variable token and other data in options.Now, gives the response status as statusCode , and creates cookie named 'token with data available with token and options variables and json does the print of  *success : true, id : student._id, token:token*.
+
+4. Create signout route to clear cookie at the time of logout as :
+
+    **signout controller :**
+    exports.signoutJobSeeker = catchAsyncErrors(async(req,res,next) => {
+            res.clearCookie('token').json({
+                message : 'Signedout Succesfully!',
+            });
+        });
+
+    This, will clear the cookie at the time of signout.
+
+5. Adding Authentication to */* route to access homepage and to */signout* route to sign out only when user is already logged in(i.e. token is already available).
+
+create a new file in Middleware folder named Auth.js and add following code :
+
+    const ErrorHandler = require("../utils/ErrorHandler");
+    const { catchAsyncErrors } = require("./catchAsyncErrors");
+
+    exports.isAuthenticated = catchAsyncErrors((req, res, next) => {
+        const {token} = req.cookies;
+        if (!token) {
+            return next(new ErrorHandler("Login to Access Resources!", 401));
+        }
+        res.json(token);
+    });
+
+If the token is already available then this middleware will access the token form cookie, and give us output in json format, or will give an error login to access resources.
+
+Apply the middleware to '/' route and '/signout' route in indexRouter.js as :
+
+    router.get('/', isAuthenticated ,homepage);
+    router.get('/signout/jobSeeker', isAuthenticated, signoutJobSeeker);
+
+**If getting token in json on test replace *res.json(token);* in isAuthenticated middleware with *next()*.**
+
+6. Now, if we want to get the details of user or student accessing login, for it we will simply at the time of authentication add the id in req.id for further use as 
+
+    exports.isAuthenticated = catchAsyncErrors((req, res, next) => {
+        const {token} = req.cookies;
+        if (!token) {
+            return next(new ErrorHandler("Login to Access Resources!", 401));
+        }
+        const {id} = jwt.verify(token,process.env.JWT_SECRET)
+        req.id = id;
+        res.json(token);
+    });
+
+
+    Now, make a route in indexRouter.js as :
+
+        router.post('/student', isAuthenticated, currentUser);
+
+    and create a currentUser controller in indexController.js as : 
+
+        exports.currentUser = catchAsyncErrors(async(req,res,next) => {
+            const student = await StudentModel.findById(req.id).exec();
+            res.json({student});
+        });
+
+**Note : dont forget to replace res.json in isAuthenticated middleware with next();**
+**Also, dont forget to require jsonwebtoken in jwt variable in the isAuthenticated middleware.**
 
 
