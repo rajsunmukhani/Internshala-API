@@ -1,6 +1,7 @@
 const { catchAsyncErrors } = require("../Middlewares/catchAsyncErrors");
 const StudentModel = require("../Models/StudentModel");
 const ErrorHandler = require('../utils/ErrorHandler');
+const { sendmail } = require("../utils/nodemailer");
 const { sendToken } = require("../utils/sendToken");
 
 exports.homepage = catchAsyncErrors(async(req,res,next) => {
@@ -33,6 +34,59 @@ exports.signoutJobSeeker = catchAsyncErrors(async(req,res,next) => {
 exports.currentUser = catchAsyncErrors(async(req,res,next) => {
     const student = await StudentModel.findById(req.id).exec();
     res.json({student});
+});
+
+exports.forgotPasswordHandler = catchAsyncErrors(async(req,res,next) => {
+    const student = await StudentModel.findOne({email : req.body.email});
+    if (!student) {
+        return next(new ErrorHandler('User not found!', 404));
+    };
+
+    student.passwordUpdateToken = "1";
+    await student.save();
+
+    const url = `${req.protocol}://${req.get('host')}/student/forgot-password/${student._id}`;
+    sendmail(req,res,next,url);
+});
+
+exports.resetForgotPassword = catchAsyncErrors(async(req,res,next) => {
+    const student = await StudentModel.findById(req.params.id).exec();
+
+    if (!student) {
+        return next(new ErrorHandler('User not found!', 404));
+    };
+
+    if (req.body.password === null || req.body.password === undefined) {
+        return next(new ErrorHandler('Please enter password!', 500));
+    }
+
+    if (student.passwordUpdateToken === "1") {
+        student.passwordUpdateToken = "0";
+        student.password = req.body.password;
+        await student.save();
+        res.status(200).json({
+            message : 'password updated successfully!'
+        })
+    }else{
+        res.status(500).json({
+            message : 'Internal Server Error!'
+        })
+    }
+
+});
+
+exports.createNewPassword = catchAsyncErrors(async(req,res,next) => {
+
+    const student = await StudentModel.findById(req.id).exec();
+
+    if (req.body.password === null || req.body.password === undefined) {
+        return next(new ErrorHandler('Please enter password!', 500));
+    }
+    
+    student.password = req.body.password;
+    student.save();
+    sendToken(student,201,res)
+
 });
 
 

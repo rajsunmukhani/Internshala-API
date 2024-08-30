@@ -251,7 +251,7 @@ NOTE: Don't forget to import bcrypt.
 
     studentSchema.pre('save', function() {
 
-        if (!studentSchema.isModified('password')) {
+        if (!this.isModified('password')) {
             return;
         }
 
@@ -331,7 +331,7 @@ NOTE: Don't forget to import bcrypt.
 
 ## Commit 8-9 : Updating Readme (as per commit 7 code), fixed some mistakes in readme.md;
 
-## Commit 10 : Creating Sessions and Authntications
+## Commit 10 : Creating Sessions and Authentications
 
 1. install following packages:
     *npm i express-session cookie-parser jsonwebtoken*
@@ -461,5 +461,200 @@ Apply the middleware to '/' route and '/signout' route in indexRouter.js as :
 
 **Note : dont forget to replace res.json in isAuthenticated middleware with next();**
 **Also, dont forget to require jsonwebtoken in jwt variable in the isAuthenticated middleware.**
+
+
+## Commit 11 : Creating Forgot Password and Reset Password Functionality
+
+**Forgot Password**
+
+1. Go to indexRouter.js and create a route as : 
+
+    *router.post('/student/forgot-password', forgotPasswordHandler);*
+
+2. Create the function *forgotPasswordHandler* in indexController.js as :
+
+    exports.forgotPasswordHandler = catchAsyncErrors(async(req,res,next) => {
+        const student = await StudentModel.findOne({email : req.body.email});
+        if (!student) {
+            return next(new ErrorHandler('User not found!', 404));
+        };
+
+        res.json({student});
+    });
+
+    And import the function in indexRouter.js.
+
+    If you are getting desired output by hitting the route.Update the controller function as :
+
+    exports.forgotPasswordHandler = catchAsyncErrors(async(req,res,next) => {
+        const student = await StudentModel.findOne({email : req.body.email});
+        if (!student) {
+            return next(new ErrorHandler('User not found!', 404));
+        };
+
+        const url = `${req.protocol}/${req.get('host')}/student/${student._id}`;
+
+        res.json({student,url});
+    });
+
+    Check the url you are getting is ok or not.
+
+3. Now, we have to send this url on mail to the user logged in. For this we will be using *nodemailer* to send mails. Hence,
+    
+    => **npm i nodemailer**
+    => create a file in utils folder named naodemailer.js.
+    => Add the following code in the file : 
+
+        const nodemailer = require('nodemailer');
+        const ErrorHandler = require('./ErrorHandler');
+
+        exports.sendmail = (req,next,url) => {
+            const transport = nodemailer.createTransport({
+                service : 'gmail',
+                host : 'smtp.gmail.com',
+                port : 465,
+                auth : {
+                    user : process.env.US_MAIL,
+                    pass : process.env.US_PASS,
+                }
+            });
+
+            const mailOptions = {
+                from : 'Raj Sunmukhani',
+                to : req.body.email,
+                subject : 'Password Reset Link',
+                html : `<h1>Click the below link to Reset Password!</h1><a href="${url}">Password Reset Link</a>`
+            };
+
+            transport.sendMail(mailOptions, (err,info) => {
+                if (err) {
+                    return next(new ErrorHandler(err,500));
+                }
+                console.log(info);
+                res.status(200).json({
+                    message : 'mail sent successfully!'
+                })
+            })
+
+        }
+
+Mail is sent successfully to the user and, now we have to make generate the controller which will take action when the link sent on mail is hit by the user, for that :
+
+4. Make a route in indexRouter.js as :
+
+router.get('/student/forgot-password/:id', resetForgotPassword);
+
+Now, creating the controller resetForgotPassword in indexController.js as :
+
+exports.resetForgotPassword = catchAsyncErrors(async(req,res,next) => {
+    res.json('Route Working!')
+});
+
+If the route is working, update the controller as : 
+
+    exports.resetForgotPassword = catchAsyncErrors(async(req,res,next) => {
+        const student = await StudentModel.findById(req.params.id).exec();
+        if (!student) {
+            return next(new ErrorHandler('User not found!', 404));
+        };
+
+        if (req.body.password === null || req.body.password === undefined) {
+            return next(new ErrorHandler('Please enter password!', 500));
+        }
+
+        student.password = req.body.password;
+        await student.save();
+        res.status(200).json({
+            message : 'password updated successfully!'
+        })
+    });
+
+5. Now, here is an issue that we can update the password as many times as we want using the same link again and again.Hence we will expire the usage of link after on use as:
+
+    => add a feild in studentModel.js as :
+
+        passwordUpdateToken : {
+            type : String,
+            default : "0"
+        };
+
+    => add following code snippet in forgotPasswordHandler:
+
+        student.passwordUpdateToken = "1";
+        await student.save();
+
+        above url initialization and declaration
+    
+    => update resetForgotPassword controller as :
+
+        exports.resetForgotPassword = catchAsyncErrors(async(req,res,next) => {
+            const student = await StudentModel.findById(req.params.id).exec();
+
+            if (!student) {
+                return next(new ErrorHandler('User not found!', 404));
+            };
+
+            if (req.body.password === null || req.body.password === undefined) {
+                return next(new ErrorHandler('Please enter password!', 500));
+            }
+
+            if (student.passwordUpdateToken === "1") {
+                student.passwordUpdateToken = "0";
+                student.password = req.body.password;
+                await student.save();
+                res.status(200).json({
+                    message : 'password updated successfully!'
+                })
+            }else{
+                res.status(500).json({
+                    message : 'Internal Server Error!'
+                })
+            }
+        });
+
+And now the link will only work when the student follows particular step or it will not work!
+
+**Reset Password**
+
+
+6. As we know that this route will get accessed by the already logged in user therefore create a route on indexRouter.js which will be authenticated as:
+
+router.get('/student/reset-password/:id', isAuthenticated ,createNewPassword);
+
+7. Create createNewPassword controller in indexController.js as:
+
+exports.createNewPassword = catchAsyncErrors(async(req,res,next) => {
+
+    const student = await StudentModel.findById(req.id).exec();
+    student.password = req.body.password;
+    student.save();
+
+});
+
+Dont forget to import this controller in your indexRouter.js file.
+
+8. Now, we have a choice that either we want to logout the user to make him login with new password or keep him logged in.
+Here we will be simple add this following code snippet to keep him logged in in the above controller as:
+
+**sendToken(student,201,res);**
+
+and you are donw with reset route.
+
+ErrorHandling in above step as :
+
+
+exports.createNewPassword = catchAsyncErrors(async(req,res,next) => {
+
+    const student = await StudentModel.findById(req.id).exec();
+
+    if (req.body.password === null || req.body.password === undefined) {
+        return next(new ErrorHandler('Please enter password!', 500));
+    }
+    
+    student.password = req.body.password;
+    student.save();
+    sendToken(student,201,res)
+
+});
 
 

@@ -14,6 +14,10 @@ const studentSchema = mongoose.Schema({
         select : false,
         minLength : [6, 'Password Length should contain atleast 6 characters'],
         maxLength : [15, 'Password Length should not be more than 15 characters'],
+    },
+    passwordUpdateToken : {
+        type : String,
+        default : "0"
     }
 },{timestamps : true});
 
