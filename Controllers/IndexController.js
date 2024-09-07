@@ -1,8 +1,11 @@
 const { catchAsyncErrors } = require("../Middlewares/catchAsyncErrors");
 const StudentModel = require("../Models/StudentModel");
 const ErrorHandler = require('../utils/ErrorHandler');
+const { initImageKit } = require("../utils/imagekit");
 const { sendmail } = require("../utils/nodemailer");
 const { sendToken } = require("../utils/sendToken");
+const path = require('path');
+
 
 exports.homepage = catchAsyncErrors(async(req,res,next) => {
     res.json({message : 'homepage'})   
@@ -88,5 +91,39 @@ exports.createNewPassword = catchAsyncErrors(async(req,res,next) => {
     sendToken(student,201,res)
 
 });
+
+exports.updateProfile = catchAsyncErrors(async(req,res,next) => {
+    const student = await StudentModel.findByIdAndUpdate(req.params.id,req.body);
+    res.status(200).json({
+        message : 'profile updated successfully!'
+    })
+});
+
+exports.updateAvatar = catchAsyncErrors(async(req,res,next) => {
+    const student = await StudentModel.findById(req.params.id);
+    const file = req.files.avatar;
+    const modfiedFileName = `resumebuilder-${Date.now()}${path.extname(file.name)}`;
+
+    const imagekit = initImageKit();
+
+    if (student.avatar.fileId !== "") {
+        await imagekit.deleteFile(student.avatar.fileId);
+    };
+    
+    const {fileId,url} = await imagekit.upload({
+        file : file.data,
+        fileName : modfiedFileName
+    });
+
+    student.avatar = {fileId,url};
+    await student.save();
+    res.json({
+        message : 'file uploaded successfully!'
+    })
+});
+
+
+
+
 
 

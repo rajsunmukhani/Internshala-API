@@ -203,7 +203,7 @@ require('./Models/Database').connectDatabase();
     });
 
 6. Now, create a route to register jobSeekers in indexRouter.js as :
-    router.post('/signup/jobSeeker', createJobSeeker);
+    router.post('/student/signup', createJobSeeker);
 
     dont forget to import createJobSeeker.
 
@@ -266,8 +266,8 @@ NOTE: Don't forget to import bcrypt.
 
     And, two routes in indexRouter.js as :
 
-    router.post('/signin/jobSeeker', signinJobSeeker);
-    router.get('/signout/jobSeeker', signoutJobSeeker);
+    router.post('/student/signin', signinJobSeeker);
+    router.get('/student/signout', signoutJobSeeker);
 
 *NOTE : Dont forget to import signinJobSeeker and signoutJobSeeker form indexController.js*
 
@@ -657,4 +657,135 @@ exports.createNewPassword = catchAsyncErrors(async(req,res,next) => {
 
 });
 
+## Commit 12 : Making user update profile
 
+1. To make user update profile, first of all lets add data feilds in studentSchema like : firstName, lastName, gender, city contact etc. with feilds like required : true, type : String and minLength, maxLength.
+
+**NOTE : Delete the existing user and create new user with new Schema and new values**
+
+2. Create a route on indexRouter.js as:
+
+    *router.post('/student/update-profile/:id', isAuthenticated , updateProfile);*
+
+    Create a controller in indexController.js named updateProfile and dont forget to import it in indexRouter.js:
+
+    exports.updateProfile = catchAsyncErrors(async(req,res,next) => {
+        const student = await StudentModel.findByIdAndUpdate(req.params.id,req.body);
+        res.status(200).json({
+            message : 'profile updated successfully!'
+        })
+    });
+
+
+    Check by updating data and sending request from postman that is it working or not in moogdb.
+
+3. Now, we will be working on uploading image, for that at first create a feild in studentModel named avatar and its data as : 
+
+    avatar : {
+        type : Object,
+        default : {
+            fileID : '' ,
+            url : ''
+        }
+    }
+
+    and add a default user url in avatar url section.
+    Delete the model from mongodb and again make it signup with avatar feild as well.
+
+4. now to upload a file we have to use a package made for express named : *npm i express-fileupload*
+
+    and we want to keep images uploaded on cloud so, that no storage of our aplication is affected and we can also access images therefore we ill be using *imagekit.io* to use it we need to install its package as *npm i imagekit*
+
+    or install them combinely using following command as : *npm i express-fileupload imagekit*
+
+    Now, setting up express file upload goes as in app.js beside cookie-parser and express-session add following snippet : 
+
+    //express fileupload
+    const upload = require('express-fileupload');
+    app.use(upload());
+
+    Now, as we upload the image or file from postman, we can see the data there by directing *update-avatar* controller as : 
+    *res.json({file : req.files})*
+
+    Now, as we are getting data, we need to save the image in cloude in imagekit.io
+
+
+5. For that get to imagekit.io website > sign in > left navigation bar > developer options > get the code for node js > create a file in utils folder named imagekit.js and inside it make a function as :
+
+    const ImageKit = require('imagekit');
+
+    exports.initImageKit = () => {
+    // Paste the copied code for node js here (remove the require line)
+    };
+
+    save the keys in .env and update the function as : 
+
+    const ImageKit = require('imagekit');
+
+    exports.initImageKit = () => {
+        var imagekit = new ImageKit({
+            publicKey : process.env.IMAGEKIT_PUBLICKEY ,
+            privateKey : process.env.IMAGEKIT_PRIVATEKEY ,
+            urlEndpoint : process.env.IMAGEKIT_URL_ENDPOINT 
+        })
+        return imagekit;
+    };
+
+6. To upload image, update the updateAvatar controller as:
+
+    exports.updateAvatar = catchAsyncErrors(async(req,res,next) => {
+        const file = req.files.avatar;
+        const modfiedFileName = `resumebuilder-${Date.now()}${path.extname(file.name)}`
+
+        res.json({modfiedFileName,file})
+    });
+
+    **NOTE : Dont forget to require path at top before use.**
+
+        To upload the image on cloud update the above controller as : 
+
+        exports.updateAvatar = catchAsyncErrors(async(req,res,next) => {
+            const student = await StudentModel.findById(req.params.id);
+            const file = req.files.avatar;
+            const modfiedFileName = `resumebuilder-${Date.now()}${path.extname(file.name)}`;
+
+            const imagekit = initImageKit();
+
+            const {fileId,url} = await imagekit.upload({
+                file : file.data,
+                fileName : modfiedFileName
+            });
+
+            student.avatar = {fileId,url};
+            await student.save();
+            res.json({
+                message : 'file uploaded successfully!'
+            })
+    });
+
+    **NOTE : Dont forget to require initImageKit at top before use.**
+
+7. Now, we want that new image should replace the old image in cloud, for that we will simply update the controller to following, just by adding a conditional:
+
+    exports.updateAvatar = catchAsyncErrors(async(req,res,next) => {
+        const student = await StudentModel.findById(req.params.id);
+        const file = req.files.avatar;
+        const modfiedFileName = `resumebuilder-${Date.now()}${path.extname(file.name)}`;
+
+        const imagekit = initImageKit();
+
+        if (student.avatar.fileId !== "") {
+            await imagekit.deleteFile(student.avatar.fileId);
+        };
+        
+        const {fileId,url} = await imagekit.upload({
+            file : file.data,
+            fileName : modfiedFileName
+        });
+
+        student.avatar = {fileId,url};
+        await student.save();
+        res.json({
+            message : 'file uploaded successfully!'
+        })
+    });

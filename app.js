@@ -19,6 +19,9 @@ app.use(session({
 }))
 app.use(cookieparser());
 
+//express fileupload
+const upload = require('express-fileupload');
+app.use(upload());
 
 //body parser
 app.use(express.json());

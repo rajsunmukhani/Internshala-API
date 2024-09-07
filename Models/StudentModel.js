@@ -18,6 +18,42 @@ const studentSchema = mongoose.Schema({
     passwordUpdateToken : {
         type : String,
         default : "0"
+    },
+    firstName : {
+        type : String,
+        required : [true, 'First Name is required!'],
+        minLength : [2, 'First name should have atleast 2 charaters'],
+        maxLength : [10, 'First name should have atmost 10 charaters']
+    },
+    lastName : {
+        type : String,
+        required : [true, 'Last Name is required!'],
+        minLength : [2, 'Last name should have atleast 2 charaters'],
+        maxLength : [10, 'Last name should have atmost 10 charaters']
+    },
+    city : {
+        type : String,
+        required : [true, 'city Name is required!'],
+        minLength : [2, 'city name should have atleast 2 charaters'],
+        maxLength : [10, 'city name should have atmost 10 charaters']
+    },
+    contact : {
+        type : String,
+        required : [true, 'Contact Number is required!'],
+        minLength : [10, 'Contact Number should have atleast 10 charaters'],
+        maxLength : [10, 'Contact Number should have atmost 10 charaters']
+    },
+    gender : {
+        type : String,
+        required : [true, 'First Name is required!'],
+        enum : ['male','female', 'others']
+    },
+    avatar : {
+        type : Object,
+        default : {
+            fileID : '' ,
+            url : 'https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=740&t=st=1725688022~exp=1725688622~hmac=4c4f4f3c818313851dd5eaeeedc28fa1bde78df11330d5f3ed59c5e0e6f78498'
+        }
     }
 },{timestamps : true});
 
