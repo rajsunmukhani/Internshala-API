@@ -54,6 +54,16 @@ const studentSchema = mongoose.Schema({
             fileID : '' ,
             url : 'https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=740&t=st=1725688022~exp=1725688622~hmac=4c4f4f3c818313851dd5eaeeedc28fa1bde78df11330d5f3ed59c5e0e6f78498'
         }
+    },
+    resume : {
+        education : [],
+        skills : [],
+        accomplishments : [],
+        courses : [],
+        projects : [],
+        responsiblities : [],
+        jobs : [],
+        internships : [],
     }
 },{timestamps : true});
 

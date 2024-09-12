@@ -789,3 +789,122 @@ exports.createNewPassword = catchAsyncErrors(async(req,res,next) => {
             message : 'file uploaded successfully!'
         })
     });
+
+## Commit 13 : Resume making and data uploading
+
+Step 1 : Make Following changes in app.js.
+    Change,
+        app.use('/', require('./Router/IndexRouter'));
+    to,
+        app.use('/user', require('./Router/IndexRouter'));
+
+    And also create a new route for resume as : 
+        app.use('/resume', require('./Router/ResumeRouter.js'));
+
+Step 2 : Create ResumeRouter.js and ResumeController.js in Routers and Controllers dir respectively as :
+        ResumeRouter.js:
+
+            const express = require('express');
+            const { isAuthenticated } = require('../Middlewares/Auth');
+            const { resume } = require('../Controllers/ResumeController');
+            const router = express();
+
+            router.get('/', isAuthenticated, resume );
+
+            module.exports = router;
+
+        ResumeController.js:
+
+            const { catchAsyncErrors } = require("../Middlewares/catchAsyncErrors");
+            const StudentModel = require("../Models/StudentModel");
+
+            exports.resume = catchAsyncErrors(async(req, res, next) => {
+                const {resume} = StudentModel.findById(req.id).exec();
+                res.json({
+                    message : 'Secured Resume : ',
+                    resume,
+                })
+            });
+
+Step 3 : Create resume in StudentSchema to access it as:
+
+        resume : {
+            education : [],
+            skills : [],
+            accomoplishments : [],
+            courses : [],
+            projects : [],
+            skills : [],
+            responsiblities : [],
+            jobs : []
+        }
+
+Step 4: check resume on */resume/* route on postman :
+        If you are getting desred output then, create add,update and delete feature all the fields in the resume object.
+
+        as for example for education let the flow go as follows:
+
+**Add Education :**
+
+    Create addEducation Controller as:
+
+        exports.addEducation = catchAsyncErrors(async(req, res, next) => {
+        const Student = await StudentModel.findById(req.id);
+        Student.resume.education.push({...req.body, id : uuid()});
+        await Student.save();
+
+        res.json({
+            message : 'Update Education Successfull!',
+            Student
+            })
+        });
+
+    Create addEducation Router as:
+
+        router.post('/add-edu', isAuthenticated, addEducation );
+
+**Edit Education :**
+
+    Create editEducation Controller as:
+
+        exports.editEducation = catchAsyncErrors(async(req, res, next) => {
+        const Student = await StudentModel.findById(req.id);
+
+        const eduIndex = Student.resume.education.findIndex(i => i.id === req.params.id)
+        Student.resume.education[eduIndex] = {...Student.resume.education[eduIndex],...req.body};
+
+        await Student.save();
+
+        res.json({
+            message : 'Update Education Successfull!',
+            Student
+        })
+        });
+
+    Create editEducation Route as:
+
+        router.post('/edit-edu/:id', isAuthenticated, editEducation );
+
+**Delete Education :**
+    
+    Create deleteEducation Controller as:
+
+        exports.deleteEducation = catchAsyncErrors(async(req, res, next) => {
+            const Student = await StudentModel.findById(req.id);
+            
+            const filteredEdu = Student.resume.education.filter(i => i.id !== req.params.id);
+            Student.resume.education = filteredEdu;
+            await Student.save();
+
+            res.json({
+                message : 'Update Education Successfull!',
+                Student
+            })
+        });
+
+    Create deleteEducation Route as:
+
+        router.post('/delete-edu/:id', isAuthenticated, deleteEducation );
+
+
+Similarly make routes for other fields in the resume.

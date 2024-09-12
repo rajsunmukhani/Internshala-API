@@ -28,7 +28,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended : false}));
 
 //routes
-app.use('/', require('./Router/IndexRouter'));
+app.use('/user', require('./Router/IndexRouter'));
+app.use('/resume', require('./Router/ResumeRouter'));
 
 
 //error handlers
