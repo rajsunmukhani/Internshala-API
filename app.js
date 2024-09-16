@@ -28,8 +28,9 @@ app.use(express.json());
 app.use(express.urlencoded({extended : false}));
 
 //routes
-app.use('/user', require('./Router/IndexRouter'));
+app.use('/student', require('./Router/IndexRouter'));
 app.use('/resume', require('./Router/ResumeRouter'));
+app.use('/employee', require('./Router/EmployeeRouter'));
 
 
 //error handlers

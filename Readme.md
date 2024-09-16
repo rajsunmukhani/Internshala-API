@@ -908,3 +908,29 @@ Step 4: check resume on */resume/* route on postman :
 
 
 Similarly make routes for other fields in the resume.
+
+## Commit 14 : Making login and functionality for employee
+
+Step 1 : Create a file named EmployeeModel.js, in Model dir and inside it define the EmployeModel almost as same as for student as:
+            => Similar to studentSchema
+            => add organisationName feild
+            => modify avatar to organisationLogo field
+            => add jobs and intership field as :
+
+                    jobs : [{
+                        type : mongoose.Schema.Types.ObjectId,
+                        ref : 'jobs'
+                    }],
+                    internships : [{
+                        type : mongoose.Schema.Types.ObjectId,
+                        ref : 'internships'
+                    }]
+
+Step 2 : Create EmployerController.js in Controllers folder and make it similar to indexController.js but this will be for employees, therefore modify the word **student** to **employee**.
+
+Step 3 : Start working on each controller by attaching it to a employerRouter file similar to indexRouterfile, by adding a new route in app.js file as : 
+        app.use('/employee', require('./Router/EmployeeRouter'));
+
+    Now define routes and controller names as per as per the employee where the controller will be same as index controller.
+
+**Note : Updated exisitng routes for better and easy understanding**
