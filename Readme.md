@@ -909,9 +909,9 @@ Step 4: check resume on */resume/* route on postman :
 
 Similarly make routes for other fields in the resume.
 
-## Commit 14 : Making login and functionality for employee
+## Commit 14 : Making login and functionality for employer
 
-Step 1 : Create a file named EmployeeModel.js, in Model dir and inside it define the EmployeModel almost as same as for student as:
+Step 1 : Create a file named EmployerModel.js, in Model dir and inside it define the EmployeModel almost as same as for student as:
             => Similar to studentSchema
             => add organisationName feild
             => modify avatar to organisationLogo field
@@ -926,11 +926,179 @@ Step 1 : Create a file named EmployeeModel.js, in Model dir and inside it define
                         ref : 'internships'
                     }]
 
-Step 2 : Create EmployerController.js in Controllers folder and make it similar to indexController.js but this will be for employees, therefore modify the word **student** to **employee**.
+Step 2 : Create EmployerController.js in Controllers folder and make it similar to indexController.js but this will be for employers, therefore modify the word **student** to **employer**.
 
 Step 3 : Start working on each controller by attaching it to a employerRouter file similar to indexRouterfile, by adding a new route in app.js file as : 
-        app.use('/employee', require('./Router/EmployeeRouter'));
+        app.use('/employer', require('./Router/EmployerRouter'));
 
-    Now define routes and controller names as per as per the employee where the controller will be same as index controller.
+    Now define routes and controller names as per as per the employer where the controller will be same as index controller.
 
 **Note : Updated exisitng routes for better and easy understanding**
+
+## Commit 15 : Making employer add vacancies for jobs and internships
+
+Step 1 : Create a new Model in Models folder named internships.js and inside it we should have the following feilds : 
+
+    profile : {
+        type : String,
+        required : true,
+    },
+    internshipType : {
+        type : String,
+        enum : ["in office", "remote"],
+        required : true,
+    },
+    openings : {
+        type : Number,
+        default : 1,
+        required : true,
+    },
+    skillsRequired : {
+        type : Array,
+        default : [],
+        required : true,
+    },
+    from : {
+        type : Date,
+        required : true,
+    },
+    to : {
+        type : Date,
+        required : true,
+    },
+    responsibility : {
+        type : String,
+        required : true,
+    },
+    duration : {
+        type : Number,
+        default : 1,
+        required : true,
+    },
+    stipend : {
+        status: {
+            type: String,
+            enum: ['Fixed', 'Negotiable', 'Performance Based', 'Unpaid'],
+            required: true,
+        },
+        amount: {
+            type: Number,
+            required: true,
+        }
+    },
+    perks : {
+        type : String,
+        required : true,
+    },
+    assessment : {
+        type : String,
+        required : true,
+    }
+
+Step 2 : Similarly create a model for the job with the following fields:
+
+    profile : {
+        type : String,
+        required : true,
+    },
+    jobType : {
+        type : String,
+        enum : ["in office", "remote"],
+        required : true,
+    },
+    openings : {
+        type : Number,
+        default : 1,
+        required : true,
+    },
+    skillsRequired : {
+        type : Array,
+        default : [],
+        required : true,
+    },
+    description : {
+        type : String,
+        required : true,
+    },
+    salary : {
+        amount: {
+            type: Number,
+            required: true,
+        }
+    },
+    preferences : {
+        type : String,
+        required : true,
+    },
+    perks : {
+        type : String,
+        required : true,
+    },
+    assessment : {
+        type : String,
+        required : true,
+    }
+
+Step 3 : Introduce routes in EmployerRouter to add jobs and internships as follows : 
+
+    router.post('/create/internship', isAuthenticated , createInternship);
+    router.post('/create/job', isAuthenticated , createJob);
+
+Step 4 : Create the controllers in EmployerController.js for the above made routes as per the names as createInternship and createJob as:
+
+    exports.createInternship = catchAsyncErrors(async(req,res,next) => {
+        const internship = await new Internships(req.body).save();
+
+        res.status(201).json({
+            success : true,
+            internship
+        })
+    });
+
+
+    exports.createJob = catchAsyncErrors(async(req,res,next) => {
+        const job = await new jobs(req.body).save();
+
+        res.status(201).json({
+            success : true,
+            job
+        });
+    });
+
+Step 5 : Check whether the routes are working or not by adding data in raw format in postman. data for reference and testing :
+
+        => For adding internship:
+
+            {
+                "profile": "Frontend Developer",
+                "internshipType": "remote",
+                "openings": 3,
+                "skillsRequired": ["React", "Node.js", "MongoDB"],
+                "from": "2024-09-01",
+                "to": "2024-12-01",
+                "responsibility": "Develop frontend using React",
+                "duration": 3,
+                "stipend": {
+                    "status": "Fixed",
+                    "amount": 5000
+                },
+                "perks": "Flexible hours, Certification",
+                "assessment": "Technical Interview"
+            }
+
+        => For adding jobs:
+
+            {
+                "profile": "Software Development Intern",
+                "jobType": "remote",
+                "openings": 3,
+                "skillsRequired": ["JavaScript", "Node.js", "MongoDB", "React"],
+                "description": "Work on developing a full-stack web application using the MERN stack. Collaborate with a team to design and implement various features and improve user experience.",
+                "salary": {
+                    "amount": 15000
+                },
+                "preferences": "Available to work full-time for at least 3 months. Preferred candidates with MERN stack experience.",
+                "perks": "Flexible working hours, Certificate of Completion, Letter of Recommendation",
+                "assessment": "Technical interview followed by a coding challenge"
+                }
+
