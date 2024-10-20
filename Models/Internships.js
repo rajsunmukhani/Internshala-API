@@ -55,9 +55,17 @@ const Internships = mongoose.Schema({
     assessment : {
         type : String,
         required : true,
-    }
+    },
+    employer : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'employer'
+    },
+    students : [{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'student'
+    }]
 },{timestamps : true});
 
-const internship = mongoose.model('internship', Internships);
+const internship = mongoose.model('internships', Internships);
 
 module.exports = (internship);

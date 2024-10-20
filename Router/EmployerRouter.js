@@ -1,6 +1,6 @@
 const express = require('express');
 const { isAuthenticated } = require('../Middlewares/Auth');
-const { homepage, signup, signout, signin, currentUser, forgotPasswordHandler, resetForgotPassword, updateProfile, updateAvatar, createNewPassword, createInternship, createJob } = require('../Controllers/EmployerController');
+const { homepage, signup, signout, signin, currentUser, forgotPasswordHandler, resetForgotPassword, updateProfile, updateAvatar, createNewPassword, createInternship, createJob, viewInternships, viewSingleInternships, viewJobs, viewSingleJob } = require('../Controllers/EmployerController');
 const router = express();
 
 router.get('/', isAuthenticated, homepage);
@@ -19,7 +19,12 @@ router.post('/update-profile/:id', isAuthenticated , updateProfile);
 router.post('/update-logo/:id', isAuthenticated , updateAvatar);
 
 router.post('/create/internship', isAuthenticated , createInternship);
+router.post('/internships', isAuthenticated , viewInternships);
+router.post('/internship/:id', isAuthenticated , viewSingleInternships);
+
 router.post('/create/job', isAuthenticated , createJob);
+router.post('/jobs', isAuthenticated , viewJobs);
+router.post('/job/:id', isAuthenticated , viewSingleJob);
 
 
 module.exports = router;

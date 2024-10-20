@@ -41,9 +41,17 @@ const Jobs = mongoose.Schema({
     assessment : {
         type : String,
         required : true,
-    }
+    },
+    employer : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'employer'
+    },
+    students : [{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'student'
+    }]
 },{timestamps : true});
 
-const jobs = mongoose.model('job', Jobs);
+const jobs = mongoose.model('jobs', Jobs);
 
 module.exports = (jobs);

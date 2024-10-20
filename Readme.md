@@ -1100,5 +1100,124 @@ Step 5 : Check whether the routes are working or not by adding data in raw forma
                 "preferences": "Available to work full-time for at least 3 months. Preferred candidates with MERN stack experience.",
                 "perks": "Flexible working hours, Certificate of Completion, Letter of Recommendation",
                 "assessment": "Technical interview followed by a coding challenge"
-                }
+            }
+
+## Commit 16 : Creating the functionality of Read, update and delete of JOB and INTERNSHIP.
+
+**1. Creating the functionality of Read and Read One.**
+
+Step 1: Create two routes in employerRouter.js as:
+
+*router.post('/internships', isAuthenticated , viewInternships);*
+*router.post('/internship/:id', isAuthenticated , viewSingleInternships);*
+
+Step 2: Now, create the controllers named viewInternships and viewSingleInternships in EmployerController.js as:
+
+exports.viewInternships = catchAsyncErrors(async(req,res,next) => {
+    const {internships} = await EmployerModel.findById(req.id).populate('internships').exec();
+
+    res.status(200).json({
+        success : true,
+        internships
+    });
+
+});
+
+exports.viewSingleInternships = catchAsyncErrors(async(req,res,next) => {
+    const internship = await Internships.findById(req.params.id).exec();;
+    
+    res.status(200).json({
+        success : true,
+        internship
+    });
+});
+
+Step 3 : Add the following employer field in both internship model as well as job model as:
+
+employer : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'employer'
+}
+
+This will store the data of employer who posted the internship or job opening.
+
+Step 4: Update createInternship controller as :
+
+    exports.createInternship = catchAsyncErrors(async(req,res,next) => {
+        const internship = await new Internships(req.body).save();
+        const employer = await EmployerModel.findById(req.id).exec();
+
+        employer.internships.push(internship._id);
+        internship.employer = employer._id;
+
+        await employer.save();
+        await internship.save();
+
+        res.status(201).json({
+            success : true,
+            internship
+        })
+    });
+
+Similarly, update createJob as : 
+
+    exports.createJob = catchAsyncErrors(async(req,res,next) => {
+        const job = await new jobs(req.body).save();
+        const employer = await EmployerModel.findById(req.id).exec();
+
+        employer.jobs.push(job._id);
+        job.employer = employer._id;
+
+        await employer.save();
+        await job.save();
+
+        res.status(201).json({
+            success : true,
+            job
+        });
+    });
+
+Step 5 : Add ErrorHandler to viewSingleInternship as:
+
+    if (!internship) {
+            return next(new ErrorHandler('Internship not found', 404));
+    }
+
+Step 6 : Similarly create the route to view and viewSingle controller for job also as:
+
+    exports.viewJobs = catchAsyncErrors(async(req,res,next) => {
+        const {jobs} = await EmployerModel.findById(req.id).populate('jobs').exec();
+        
+        res.status(200).json({
+            success : true,
+            jobs
+        });
+        
+    });
+
+
+    exports.viewSingleJob = catchAsyncErrors(async(req,res,next) => {
+        const job = await jobs.findById(req.params.id).exec();
+
+        if (!job) {
+            return next(new ErrorHandler('Job not found', 404));
+        }
+        
+        res.status(200).json({
+            success : true,
+            job
+        });
+    });
+
+Step 7 : Making the functionality to get the number of applies a job or internship got.
+
+add the following code snippet to internship model as well as job model as:
+
+students : [{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'student'
+}]
+
+Step 8 : Now making the functionality for the student by keeping the information about the applied internships and jobs in the database. 
+For this add the following feild in studentModel.js as :
 

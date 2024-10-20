@@ -126,6 +126,13 @@ exports.updateAvatar = catchAsyncErrors(async(req,res,next) => {
 
 exports.createInternship = catchAsyncErrors(async(req,res,next) => {
     const internship = await new Internships(req.body).save();
+    const employer = await EmployerModel.findById(req.id).exec();
+
+    employer.internships.push(internship._id);
+    internship.employer = employer._id;
+
+    await employer.save();
+    await internship.save();
 
     res.status(201).json({
         success : true,
@@ -134,10 +141,67 @@ exports.createInternship = catchAsyncErrors(async(req,res,next) => {
 });
 
 
+exports.viewInternships = catchAsyncErrors(async(req,res,next) => {
+    const {internships} = await EmployerModel.findById(req.id).populate('internships').exec();
+    
+    res.status(200).json({
+        success : true,
+        internships
+    });
+    
+});
+
+
+exports.viewSingleInternships = catchAsyncErrors(async(req,res,next) => {
+    const internship = await Internships.findById(req.params.id).exec();
+
+    if (!internship) {
+        return next(new ErrorHandler('Internship not found', 404));
+    }
+    
+    res.status(200).json({
+        success : true,
+        internship
+    });
+});
+
+
+
 exports.createJob = catchAsyncErrors(async(req,res,next) => {
     const job = await new jobs(req.body).save();
-
+    const employer = await EmployerModel.findById(req.id).exec();
+    
+    employer.jobs.push(job._id);
+    job.employer = employer._id;
+    
+    await employer.save();
+    await job.save();
+    
     res.status(201).json({
+        success : true,
+        job
+    });
+});
+
+exports.viewJobs = catchAsyncErrors(async(req,res,next) => {
+    const {jobs} = await EmployerModel.findById(req.id).populate('jobs').exec();
+    
+    res.status(200).json({
+        success : true,
+        jobs
+    });
+    
+});
+
+
+exports.viewSingleJob = catchAsyncErrors(async(req,res,next) => {
+    const job = await jobs.findById(req.params.id).exec();
+
+    if (!job) {
+        return next(new ErrorHandler('Job not found', 404));
+    }
+    
+    res.status(200).json({
         success : true,
         job
     });

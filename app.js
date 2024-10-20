@@ -30,7 +30,7 @@ app.use(express.urlencoded({extended : false}));
 //routes
 app.use('/student', require('./Router/IndexRouter'));
 app.use('/resume', require('./Router/ResumeRouter'));
-app.use('/employee', require('./Router/EmployerRouter'));
+app.use('/employer', require('./Router/EmployerRouter'));
 
 
 //error handlers

@@ -64,7 +64,15 @@ const studentSchema = mongoose.Schema({
         responsiblities : [],
         jobs : [],
         internships : [],
-    }
+    },
+    internships : [{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'internships',
+    }],
+    jobs : [{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'internships',
+    }]
 },{timestamps : true});
 
 studentSchema.pre('save',function(){
