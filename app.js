@@ -27,6 +27,11 @@ app.use(upload());
 app.use(express.json());
 app.use(express.urlencoded({extended : false}));
 
+// redirect route 
+app.get('/', (req, res) => {
+    res.redirect('/student');
+});
+
 //routes
 app.use('/student', require('./Router/IndexRouter'));
 app.use('/resume', require('./Router/ResumeRouter'));
