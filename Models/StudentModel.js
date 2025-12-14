@@ -71,7 +71,7 @@ const studentSchema = mongoose.Schema({
     }],
     jobs : [{
         type : mongoose.Schema.Types.ObjectId,
-        ref : 'internships',
+        ref : 'jobs',
     }]
 },{timestamps : true});
 
@@ -83,7 +83,7 @@ studentSchema.pre('save',function(){
     this.password = bcrypt.hashSync(this.password, salt);
 });
 
-studentSchema.methods.comparePasswords = function(password){
+studentSchema.methods.comparePassword = function(password){
     return bcrypt.compareSync(password, this.password);
 };
 

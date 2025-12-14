@@ -7,7 +7,11 @@ exports.isAuthenticated = catchAsyncErrors((req, res, next) => {
     if (!token) {
         return next(new ErrorHandler("Login to Access Resources!", 401));
     }
-    const {id} = jwt.verify(token,process.env.JWT_SECRET);
-    req.id = id;
-    next();
+    try {
+        const {id} = jwt.verify(token,process.env.JWT_SECRET);
+        req.id = id;
+        next();    
+    } catch (error) {
+        return next(new ErrorHandler("Invalid or Expired Token", 401));
+    }
 });

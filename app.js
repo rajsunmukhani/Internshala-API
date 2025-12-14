@@ -1,4 +1,4 @@
-require('dotenv').config('./.env');
+require('dotenv').config();
 const express = require('express');
 const app = express();
 
@@ -9,14 +9,14 @@ const { generatedError } = require('./Middlewares/Error');
 app.use(logger('tiny'));
 
 //cookie-parser & express-session
-const session = require('express-session');
+// const session = require('express-session');
 const cookieparser = require('cookie-parser');
 
-app.use(session({
-    resave : true,
-    saveUninitialized : true,
-    secret : process.env.SESSION_SECRET
-}))
+// app.use(session({
+//     resave : true,
+//     saveUninitialized : true,
+//     secret : process.env.SESSION_SECRET
+// }))
 app.use(cookieparser());
 
 //express fileupload
@@ -47,4 +47,5 @@ app.use(generatedError);
 //db connection
 require('./Models/Database').connectDatabase();
 
-app.listen(process.env.PORT,console.log(`server is running on Port : ${process.env.PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT,console.log(`server is running on Port : ${PORT}`));
