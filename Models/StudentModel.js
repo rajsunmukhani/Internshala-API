@@ -45,7 +45,7 @@ const studentSchema = mongoose.Schema({
     },
     gender : {
         type : String,
-        required : [true, 'First Name is required!'],
+        required : [true, 'Gender is required!'],
         enum : ['male','female', 'others']
     },
     avatar : {
