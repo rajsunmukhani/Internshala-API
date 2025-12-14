@@ -83,7 +83,7 @@ studentSchema.pre('save',function(){
     this.password = bcrypt.hashSync(this.password, salt);
 });
 
-studentSchema.methods.comparePassword = function(password){
+studentSchema.methods.comparePasswords = function(password){
     return bcrypt.compareSync(password, this.password);
 };
 
